@@ -1,0 +1,9 @@
+{
+  "id": "graph-color-propagation",
+  "name": "Graph Color Propagation",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Propagates graph node colors to uncolored nodes based on their connections.",
+  "author": "custom",
+  "isDesktopOnly": true
+}
