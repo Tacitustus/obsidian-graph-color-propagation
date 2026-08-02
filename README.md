@@ -1,5 +1,7 @@
 # Graph Color Propagation
 
+> **[日本語ドキュメント / Japanese Documentation](README.ja.md)**
+
 Propagates graph node colors to uncolored nodes based on their connections.
 
 Define color groups in Obsidian's built-in **Graph view → Groups** panel as usual — this plugin reads those groups and automatically spreads their colors to nearby notes that don't have a group of their own, based on how closely they're linked. No extra configuration files or query syntax to learn.
@@ -31,7 +33,7 @@ Define color groups in Obsidian's built-in **Graph view → Groups** panel as us
 ## Commands
 
 - **Apply propagated colors to graph** — manually recompute and apply colors.
-- **Debug: ノード構造をコンソールに出力** — dumps the internal structure of the first graph node to the developer console, useful for troubleshooting if Obsidian's internal Graph renderer changes.
+- **Debug: Dump node structure to console** — dumps the internal structure of the first graph node to the developer console, useful for troubleshooting if Obsidian's internal Graph renderer changes.
 
 ## Requirements
 
@@ -45,7 +47,7 @@ Define color groups in Obsidian's built-in **Graph view → Groups** panel as us
 3. Click **Install**, then **Enable**.
 
 ### Manual installation
-1. Download `main.js`, `manifest.json`, and `styles.css` (if present) from the [latest release](../../releases).
+1. Download `main.js` and `manifest.json` from the [latest release](../../releases).
 2. Copy them into `<your-vault>/.obsidian/plugins/graph-color-propagation/`.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 

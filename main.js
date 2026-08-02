@@ -63,7 +63,7 @@ class GraphColorPropagationPlugin extends Plugin {
     //   問題調査時にノードオブジェクトの中身を確認できるようにしておく）
     this.addCommand({
       id: "debug-node-structure",
-      name: "Debug: ノード構造をコンソールに出力",
+      name: "Debug: Dump node structure to console",
       callback: () => this.debugNodeStructure(),
     });
 
@@ -202,7 +202,7 @@ class GraphColorPropagationPlugin extends Plugin {
       //   ハードコードで ".obsidian" と決め打ちしない）
       const configDir = this.app.vault.configDir;
       const graphPath = configDir + "/graph.json";
-      console.log("graph.json パス:", graphPath);
+
 
       let content = null;
 
@@ -222,23 +222,23 @@ class GraphColorPropagationPlugin extends Plugin {
           content = await this.app.vault.adapter.read(graphPath);
         } catch (e2) {
           // ファイルがまだ存在しない（一度もグラフのグループ設定をしていない）場合等
-          console.log("adapter.read失敗:", e2);
+          console.debug("adapter.read failed:", e2);
         }
       }
 
       // どちらの方法でも読み込めなかった場合は空配列を返す
       if (!content) {
-        console.log("graph.json が見つかりません。configDir:", configDir);
+
         return [];
       }
 
       // JSON文字列をパースしてオブジェクトに変換
       const config = JSON.parse(content);
-      console.log("graph.json 内容:", config);
+
 
       // colorGroups が無い場合は空配列扱いにする（オプショナルチェイニング＋??）
       const groups = config?.colorGroups ?? [];
-      console.log("colorGroups:", groups);
+
 
       // query（フィルタ条件文字列）と color（色情報）の両方が
       // 設定されているグループだけを対象にし、扱いやすい形式に整形する
@@ -342,12 +342,12 @@ class GraphColorPropagationPlugin extends Plugin {
   debugNodeStructure() {
     const graphLeaves = this.app.workspace.getLeavesOfType("graph");
     if (graphLeaves.length === 0) {
-      new Notice("グラフビューが開いていません");
+      new Notice("No graph view is open.");
       return;
     }
     const renderer = graphLeaves[0].view?.renderer;
     if (!renderer) {
-      new Notice("renderer なし");
+      new Notice("Graph renderer not found.");
       return;
     }
     const firstKey = Object.keys(renderer.nodeLookup)[0];
@@ -356,7 +356,7 @@ class GraphColorPropagationPlugin extends Plugin {
     console.log("key:", firstKey);
     console.log("node keys:", Object.keys(firstNode || {}));
     console.log("node:", firstNode);
-    new Notice("コンソールにノード構造を出力しました");
+    new Notice("Node structure dumped to developer console.");
   }
 
   // ==================================================================
@@ -369,7 +369,7 @@ class GraphColorPropagationPlugin extends Plugin {
 
     if (groupColors.length === 0) {
       new Notice(
-        "グラフビューのグループ設定が見つかりません。グラフビューの「グループ」で色を設定してください。",
+        "No color groups found. Define groups in Graph view settings first.",
       );
       return;
     }
@@ -377,7 +377,7 @@ class GraphColorPropagationPlugin extends Plugin {
     // ---- 手順2: Vault内の全Markdownファイルを取得 ----
     const files = this.app.vault.getMarkdownFiles();
     if (files.length === 0) {
-      new Notice("ノートが見つかりません");
+      new Notice("No notes found in the vault.");
       return;
     }
 
@@ -475,14 +475,14 @@ class GraphColorPropagationPlugin extends Plugin {
     }
 
     if (propagated.size === 0) {
-      new Notice("伝播できるノードが見つかりません。");
+      new Notice("No nodes to propagate colors to.");
       return;
     }
 
     // ---- 手順6: 実際のグラフビュー（複数開いている場合は全て）に色を適用 ----
     const graphLeaves = this.app.workspace.getLeavesOfType("graph");
     if (graphLeaves.length === 0) {
-      new Notice("グラフビューが開いていません");
+      new Notice("No graph view is open.");
       return;
     }
 
@@ -570,7 +570,7 @@ class GraphColorPropagationPlugin extends Plugin {
     }
 
     new Notice(
-      `${applied}個のノードに色を適用しました（グループ設定: ${groupColors.length}件を同期）`,
+      `Applied colors to ${applied} node(s) (synced ${groupColors.length} group(s)).`,
     );
   }
 }
@@ -590,10 +590,10 @@ class GraphColorSettingTab extends PluginSettingTab {
     // 再描画のたびに前回の内容をクリアしておく
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Graph Color Propagation 設定" });
+    containerEl.createEl("h2", { text: "Graph Color Propagation" });
 
     containerEl.createEl("p", {
-      text: "グラフビューの「グループ」設定が自動的に同期されます。グループの色設定はグラフビュー側で行ってください。",
+      text: "Color groups are automatically synced from Graph view settings. Define your groups there.",
       cls: "setting-item-description",
     });
 
@@ -601,9 +601,9 @@ class GraphColorSettingTab extends PluginSettingTab {
     // ONの場合、グラフビューを開いたとき・グループ設定を変更したときに
     // ボタン操作なしで自動的に色が反映される（本プラグインの中心機能）
     new Setting(containerEl)
-      .setName("グラフビュー表示時に自動適用")
+      .setName("Auto-apply on graph open")
       .setDesc(
-        "グラフビューを開いたとき・グループ設定を変更したときに自動で色を伝播します",
+        "Automatically propagate colors when the graph view opens or group settings change.",
       )
       .addToggle((toggle) =>
         toggle
@@ -618,9 +618,9 @@ class GraphColorSettingTab extends PluginSettingTab {
     // 1ホップ進むごとに色の影響力へ掛け算される係数。
     // 1.0に近いほど遠くのノードの色も強く影響し、0に近いほどすぐ影響が消える。
     new Setting(containerEl)
-      .setName("減衰係数")
+      .setName("Decay factor")
       .setDesc(
-        "距離が1ホップ増えるごとに色の影響力を掛け算する係数（0〜1）。小さいほど遠くの色の影響が弱くなります",
+        "Multiplier applied per hop (0–1). Lower values make distant colors fade faster.",
       )
       .addSlider((slider) =>
         slider
@@ -637,8 +637,8 @@ class GraphColorSettingTab extends PluginSettingTab {
     // 色を持たないノードから、色源を探すために何ホップ先まで
     // BFSで探索するかの上限。値が大きいほど計算量が増える。
     new Setting(containerEl)
-      .setName("最大ホップ数")
-      .setDesc("何ホップ先まで色の影響を探索するか（1〜5）")
+      .setName("Max hops")
+      .setDesc("How many hops to search for colored nodes (1–5).")
       .addSlider((slider) =>
         slider
           .setLimits(1, 5, 1)
@@ -654,8 +654,8 @@ class GraphColorSettingTab extends PluginSettingTab {
     // この値未満に減衰した色源は「ほぼ無視できるレベル」とみなし、
     // 計算対象から除外する（無駄な遠距離の色源計算を打ち切るための閾値）
     new Setting(containerEl)
-      .setName("最小影響度")
-      .setDesc("この値以下の重みの色は無視します（0.01〜0.2）")
+      .setName("Min influence")
+      .setDesc("Colors with weight below this threshold are ignored (0.01–0.2).")
       .addSlider((slider) =>
         slider
           .setLimits(0.01, 0.2, 0.01)
@@ -671,7 +671,7 @@ class GraphColorSettingTab extends PluginSettingTab {
     // 自動適用がOFFの場合や、即座に強制的に再計算したい場合に使う
     new Setting(containerEl).addButton((btn) =>
       btn
-        .setButtonText("今すぐ適用")
+        .setButtonText("Apply now")
         .setCta()
         .onClick(() => this.plugin.applyColors()),
     );
