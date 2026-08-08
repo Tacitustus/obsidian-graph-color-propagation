@@ -1,6 +1,7 @@
 # Graph Color Propagation
 
 > **[日本語ドキュメント / Japanese Documentation](README.ja.md)**
+> 
 > **[Qiita](https://qiita.com/Tacitustus/items/8b97cbf8314fd453d047)**
 
 Propagates graph node colors to uncolored nodes based on their connections.
