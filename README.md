@@ -1,6 +1,8 @@
 # Graph Color Propagation
 
 > **[日本語ドキュメント / Japanese Documentation](README.ja.md)**
+>
+> **[Obsidian Community](https://community.obsidian.md/plugins/graph-color-propagation)**
 > 
 > **[Qiita](https://qiita.com/Tacitustus/items/8b97cbf8314fd453d047)**
 
