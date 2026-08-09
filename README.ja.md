@@ -2,6 +2,8 @@
 
 > **[English Documentation](README.md)**
 >
+> **[Obsidian Community](https://community.obsidian.md/plugins/graph-color-propagation)**
+>
 > **[Qiita](https://qiita.com/Tacitustus/items/8b97cbf8314fd453d047)**
 
 グラフビューのノードの色を、リンク関係に基づいて未着色のノードに伝播させる Obsidian プラグインです。
