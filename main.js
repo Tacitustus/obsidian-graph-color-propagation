@@ -364,6 +364,20 @@ class GraphColorPropagationPlugin extends Plugin {
   // グラフビューへ実際に反映する
   // ==================================================================
   async applyColors() {
+    if (this.isApplyingColors) return;
+    this.isApplyingColors = true;
+    try {
+
+    // 処理中にメインスレッドをブロックしないための非同期yield関数
+    let lastYieldTime = Date.now();
+    const yieldIfNeeded = async () => {
+      const now = Date.now();
+      if (now - lastYieldTime > 16) { // 約60fps（16ms）以上の処理時間がかかったら
+        await new Promise((resolve) => setTimeout(resolve, 0)); // メインスレッドを解放
+        lastYieldTime = Date.now();
+      }
+    };
+
     // ---- 手順1: グラフビューのグループ設定（色分けルール）を取得 ----
     const groupColors = await this.getGraphGroups();
 
@@ -388,6 +402,7 @@ class GraphColorPropagationPlugin extends Plugin {
     // を持つエントリを作成する
     const nodeMap = new Map();
     for (const file of files) {
+      await yieldIfNeeded();
       const color = this.getNodeGroup(file.path, groupColors);
       nodeMap.set(file.path, { color, links: new Set() });
     }
@@ -397,6 +412,7 @@ class GraphColorPropagationPlugin extends Plugin {
     // リンク先の実ファイルを解決してnodeMapの双方向リンクとして登録する
     // （Obsidianのグラフビューはリンクの向きに関わらず線で結ぶため、無向グラフとして扱う）
     for (const file of files) {
+      await yieldIfNeeded();
       const cache = this.app.metadataCache.getFileCache(file);
       if (!cache?.links) continue;
       for (const link of cache.links) {
@@ -420,6 +436,7 @@ class GraphColorPropagationPlugin extends Plugin {
     // 最終的な色（RGB）を決定する。
     const propagated = new Map();
     for (const [path, node] of nodeMap) {
+      await yieldIfNeeded();
       // 既に色が設定されているノードは伝播計算の対象外（そのままの色を使う）
       if (node.color) continue;
 
@@ -429,6 +446,7 @@ class GraphColorPropagationPlugin extends Plugin {
       const influences = []; // 収集した色源とその重みのリスト
 
       while (queue.length > 0) {
+        await yieldIfNeeded();
         const { p, hop } = queue.shift();
 
         // 設定された最大ホップ数を超えたら、これ以上その経路は探索しない
@@ -544,6 +562,7 @@ class GraphColorPropagationPlugin extends Plugin {
       // ここでは念のため今のnodeLookupに対しても直接色を設定しておき、
       // さらに直後にrenderCallback()を明示的に呼んで即座に画面へ反映させる。
       for (const [nodePath, nodeData] of Object.entries(renderer.nodeLookup)) {
+        await yieldIfNeeded();
         if (!propagated.has(nodePath)) continue;
         const { r, g, b } = propagated.get(nodePath);
         const colorInt =
@@ -572,6 +591,9 @@ class GraphColorPropagationPlugin extends Plugin {
     new Notice(
       `Applied colors to ${applied} node(s) (synced ${groupColors.length} group(s)).`,
     );
+    } finally {
+      this.isApplyingColors = false;
+    }
   }
 }
 
